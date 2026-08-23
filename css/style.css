@@ -10,6 +10,10 @@
     --radius-md: 12px;
     --shadow-soft: 0 10px 30px rgba(35, 72, 118, 0.1);
     --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    /* Warna gold khusus untuk aksen border kartu/elemen interaktif */
+    --gold: #D4AF37;
+    --gold-soft: #F5E1A4;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
@@ -27,7 +31,11 @@ body {
     min-height: 100vh;
 }
 
-/* WRAPPER MOBILE-ONLY: seluruh undangan dibatasi seukuran layar HP */
+/* WRAPPER MOBILE-ONLY: seluruh undangan dibatasi seukuran layar HP.
+   transform: translateZ(0) membuat wrapper ini jadi "containing block" untuk
+   semua elemen anak yang position:fixed (nav-cluster, toast) -- efeknya,
+   elemen fixed tsb terkunci relatif ke KOTAK HP ini, bukan ke seluruh
+   jendela browser. Ini yang bikin tampilan laptop otomatis sama seperti hp. */
 #appWrapper {
     position: relative;
     width: 100%;
@@ -39,25 +47,30 @@ body {
     box-shadow: 0 0 60px rgba(0, 0, 0, 0.25);
     -ms-overflow-style: none;
     scrollbar-width: none;
+    transform: translateZ(0);
 }
 #appWrapper::-webkit-scrollbar { width: 0; height: 0; }
 
-/* GRUP NAVIGASI: tombol musik + side-nav digabung jadi satu.
-   position: fixed agar tetap terlihat di SEMUA section saat discroll,
-   bukan hanya ikut lewat di Beranda saja. */
+/* GRUP NAVIGASI: tombol musik + side-nav.
+   Disusun VERTIKAL (audio di atas, pill nav di bawah) supaya pill nav
+   dapat lebar penuh untuk mengembang saat section aktif/hover, tanpa
+   desak-desakan dengan tombol musik.
+   position: fixed relatif ke #appWrapper (lihat transform di atasnya),
+   jadi selalu nempel di bagian bawah "layar HP" di ukuran layar apa pun. */
 .nav-cluster {
     position: fixed;
-    right: 25px;
-    top: 50%;
-    transform: translateY(-50%);
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 10px;
     z-index: 999;
+    max-width: 94%;
 }
 
-/* TOMBOL AUDIO */
+/* TOMBOL AUDIO: bulatan mengambang sendiri di atas pill nav */
 .audio-control {
     width: 46px;
     height: 46px;
@@ -75,18 +88,23 @@ body {
 }
 .audio-control i { font-size: 1.15rem; }
 
-/* NAVIGASI SAMPING */
+/* NAVIGASI: pill horizontal, selalu satu baris (mobile & desktop sama) */
 .side-nav {
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
-    padding: 15px 10px;
+    padding: 10px 12px;
     border-radius: 30px;
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-direction: row;
+    gap: 8px;
     box-shadow: var(--shadow-soft);
     border: 1px solid rgba(111, 168, 220, 0.25);
+    max-width: 100%;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
+.side-nav::-webkit-scrollbar { width: 0; height: 0; }
 
 /* Nav item: lingkaran berisi ikon saja secara default.
    Saat section-nya aktif (.active) atau di-hover, berubah jadi bentuk PIL
@@ -107,6 +125,7 @@ body {
     background-color: transparent;
     overflow: hidden;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .nav-item .nav-label {
@@ -205,7 +224,9 @@ body {
 .btn-open:hover { background-color: var(--dark-sage); transform: translateY(-2px); }
 
 /* MAIN & SECTION COMPONENTS */
-main { width: 100%; margin: 0 auto; padding: 0 20px; }
+/* padding-bottom diberi ruang untuk nav-cluster (audio + pill) yang
+   sekarang fixed di semua ukuran layar, bukan cuma mobile */
+main { width: 100%; margin: 0 auto; padding: 0 20px 110px; }
 section { padding: 60px 0; border-bottom: 1px dashed rgba(111, 168, 220, 0.3); }
 
 .section-header { text-align: center; margin-bottom: 50px; }
@@ -269,8 +290,9 @@ section { padding: 60px 0; border-bottom: 1px dashed rgba(111, 168, 220, 0.3); }
     line-height: 1.7;
 }
 
+/* COUNTDOWN: garis luar gold */
 .countdown-container { display: flex; justify-content: center; gap: 12px; margin-top: 30px; flex-wrap: wrap; }
-.countdown-item { background-color: var(--bg-sage-light); padding: 15px; border-radius: var(--radius-md); min-width: 70px; border: 1px solid rgba(111, 168, 220, 0.25); }
+.countdown-item { background-color: var(--bg-sage-light); padding: 15px; border-radius: var(--radius-md); min-width: 70px; border: 1px solid var(--gold); }
 .countdown-number { font-size: 1.8rem; font-weight: 700; color: var(--dark-sage); display: block; }
 .countdown-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
@@ -323,19 +345,21 @@ section { padding: 60px 0; border-bottom: 1px dashed rgba(111, 168, 220, 0.3); }
 .event-detail { display: flex; align-items: center; gap: 10px; color: var(--text-muted); margin-bottom: 8px; font-size: 0.9rem; }
 .event-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 .btn-action { padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: var(--transition); }
-.btn-maps { background-color: var(--primary-sage); color: #FFF; }
+/* Tombol maps & kalender: garis luar gold */
+.btn-maps { background-color: var(--primary-sage); color: #FFF; border: 1px solid var(--gold); }
 .btn-maps:hover { background-color: var(--dark-sage); }
-.btn-calendar { background-color: transparent; border: 1px solid var(--primary-sage); color: var(--primary-sage); }
+.btn-calendar { background-color: transparent; border: 1px solid var(--gold); color: var(--primary-sage); }
 .btn-calendar:hover { background-color: var(--primary-sage); color: #FFF; }
 
+/* GALERI: garis luar gold tipis di tiap foto */
 .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-.gallery-item { position: relative; border-radius: var(--radius-md); overflow: hidden; height: 150px; }
+.gallery-item { position: relative; border-radius: var(--radius-md); overflow: hidden; height: 150px; border: 1px solid var(--gold); }
 .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: var(--transition); }
 .gallery-item:hover img { transform: scale(1.05); }
 
-/* WEDDING GIFT - kartu ATM dengan chip */
+/* WEDDING GIFT - kartu ATM dengan chip, garis luar gold */
 .gift-cards { display: grid; grid-template-columns: 1fr; gap: 20px; }
-.atm-card { background: linear-gradient(135deg, var(--dark-sage), var(--primary-sage)); color: #FFF; border-radius: var(--radius-lg); padding: 25px; box-shadow: var(--shadow-soft); position: relative; overflow: hidden; }
+.atm-card { background: linear-gradient(135deg, var(--dark-sage), var(--primary-sage)); color: #FFF; border-radius: var(--radius-lg); padding: 25px; box-shadow: var(--shadow-soft); position: relative; overflow: hidden; border: 1px solid var(--gold); }
 .atm-card::after {
     content: '';
     position: absolute;
@@ -348,13 +372,13 @@ section { padding: 60px 0; border-bottom: 1px dashed rgba(111, 168, 220, 0.3); }
 }
 .bank-logo { font-weight: 700; font-size: 1.2rem; letter-spacing: 2px; text-align: right; color: #FFFFFF; position: relative; z-index: 1; }
 
-/* Chip kartu ATM ala EMV chip */
+/* Chip kartu ATM ala EMV chip -- warna gold */
 .card-chip {
     width: 42px;
     height: 32px;
     border-radius: 6px;
     margin-top: 18px;
-    background: linear-gradient(135deg, #EAF4FC, #B9D6EE);
+    background: linear-gradient(135deg, var(--gold-soft), var(--gold));
     position: relative;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     z-index: 1;
@@ -381,17 +405,18 @@ section { padding: 60px 0; border-bottom: 1px dashed rgba(111, 168, 220, 0.3); }
 .btn-copy { margin-top: 15px; background: rgba(255,255,255,0.2); color: #FFF; border: 1px solid rgba(255,255,255,0.4); padding: 6px 14px; border-radius: 15px; font-size: 0.8rem; cursor: pointer; transition: var(--transition); position: relative; z-index: 1; }
 .btn-copy:hover { background: #FFF; color: var(--dark-sage); }
 
-.rsvp-form { background: var(--bg-sage-card); border-radius: var(--radius-lg); padding: 25px; box-shadow: var(--shadow-soft); border: 1px solid rgba(111, 168, 220, 0.2); }
+/* RSVP / Konfirmasi Kehadiran: garis luar gold */
+.rsvp-form { background: var(--bg-sage-card); border-radius: var(--radius-lg); padding: 25px; box-shadow: var(--shadow-soft); border: 1px solid var(--gold); }
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; color: var(--dark-sage); }
 .form-control { width: 100%; padding: 12px 15px; border-radius: var(--radius-md); border: 1px solid rgba(111, 168, 220, 0.35); background-color: var(--bg-sage-light); font-family: inherit; font-size: 0.95rem; transition: var(--transition); }
-.form-control:focus { outline: none; border-color: var(--primary-sage); background-color: #FFF; }
+.form-control:focus { outline: none; border-color: var(--gold); background-color: #FFF; }
 .btn-submit { width: 100%; background-color: var(--primary-sage); color: #FFF; border: none; padding: 14px; border-radius: var(--radius-md); font-size: 1rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
 .btn-submit:hover { background-color: var(--dark-sage); }
 .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
 .comments-list { margin-top: 30px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-.comment-item { background: var(--bg-sage-light); padding: 15px; border-radius: var(--radius-md); border-left: 3px solid var(--primary-sage); }
+.comment-item { background: var(--bg-sage-light); padding: 15px; border-radius: var(--radius-md); border-left: 3px solid var(--gold); }
 .comment-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
 .comment-author { font-weight: 600; font-size: 0.95rem; color: var(--dark-sage); }
 .comment-badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; background: rgba(111, 168, 220, 0.2); color: var(--dark-sage); white-space: nowrap; }
@@ -400,5 +425,8 @@ section { padding: 60px 0; border-bottom: 1px dashed rgba(111, 168, 220, 0.3); }
 .comment-badge.tidak-hadir { background: rgba(196, 90, 90, 0.18); color: #A94442; }
 .comment-text { font-size: 0.9rem; color: var(--text-dark); }
 
-#toast { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--dark-sage); color: #FFF; padding: 12px 25px; border-radius: 25px; font-size: 0.9rem; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: transform 0.4s ease; z-index: 10000; max-width: 85%; text-align: center; }
+/* TOAST: fixed relatif ke #appWrapper (lihat transform di #appWrapper),
+   jadi selalu nempel di bawah "layar HP" yang terlihat, tidak ikut
+   ke-scroll bersama konten sepanjang halaman. */
+#toast { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--dark-sage); color: #FFF; padding: 12px 25px; border-radius: 25px; font-size: 0.9rem; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: transform 0.4s ease; z-index: 10000; max-width: 85%; text-align: center; }
 #toast.show { transform: translateX(-50%) translateY(0); }

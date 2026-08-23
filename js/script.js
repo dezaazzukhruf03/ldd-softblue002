@@ -72,13 +72,26 @@ function smoothScrollTo(targetY, duration) {
   requestAnimationFrame(scrollStep);
 }
 
+// Kecepatan scroll konstan (px per detik). Durasi dihitung dari jarak
+// tempuh dibagi kecepatan ini, jadi kecepatan visualnya selalu terasa
+// sama pelan berapa pun panjang halaman -- bukan durasi tetap seperti
+// sebelumnya yang bikin halaman panjang terasa "meloncat cepat".
+const AUTO_SCROLL_SPEED_PX_PER_SEC = 160;
+const AUTO_SCROLL_MIN_DURATION = 2500;   // ms, batas bawah agar tidak terlalu instan
+const AUTO_SCROLL_MAX_DURATION = 12000;  // ms, batas atas agar tidak kelamaan
+
 function autoScrollToGift() {
   const wrapper = document.getElementById('appWrapper');
   const giftSection = document.getElementById('gift');
   if (!wrapper || !giftSection) return;
 
   const targetY = giftSection.offsetTop - 20;
-  smoothScrollTo(targetY, 4500);
+  const distance = Math.abs(targetY - wrapper.scrollTop);
+
+  let duration = (distance / AUTO_SCROLL_SPEED_PX_PER_SEC) * 1000;
+  duration = Math.min(Math.max(duration, AUTO_SCROLL_MIN_DURATION), AUTO_SCROLL_MAX_DURATION);
+
+  smoothScrollTo(targetY, duration);
 }
 
 // Fungsi Salin Rekening
