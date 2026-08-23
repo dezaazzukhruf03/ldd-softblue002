@@ -4,7 +4,7 @@
 
 // Kunci scroll wrapper sebelum tombol buka undangan diklik
 document.addEventListener('DOMContentLoaded', () => {
-  const wrapper = document.getElementById('appWrapper');
+  const wrapper = document.getElementById('scrollArea');
   if (wrapper) wrapper.style.overflowY = 'hidden';
 });
 
@@ -13,7 +13,7 @@ let fadeUpInitialized = false;
 // Fungsi Buka Undangan (dipanggil dari onclick tombol "Buka Undangan")
 function openInvitation() {
   const cover = document.getElementById('cover');
-  const wrapper = document.getElementById('appWrapper');
+  const wrapper = document.getElementById('scrollArea');
 
   if (cover) {
     cover.classList.add('open');
@@ -46,7 +46,7 @@ function openInvitation() {
 // Scroll halus kustom dengan easing, agar terasa "perlahan" melewati
 // setiap section alih-alih lompat langsung ke tujuan
 function smoothScrollTo(targetY, duration) {
-  const wrapper = document.getElementById('appWrapper');
+  const wrapper = document.getElementById('scrollArea');
   if (!wrapper) return;
 
   const startY = wrapper.scrollTop;
@@ -81,7 +81,7 @@ const AUTO_SCROLL_MIN_DURATION = 2500;   // ms, batas bawah agar tidak terlalu i
 const AUTO_SCROLL_MAX_DURATION = 12000;  // ms, batas atas agar tidak kelamaan
 
 function autoScrollToGift() {
-  const wrapper = document.getElementById('appWrapper');
+  const wrapper = document.getElementById('scrollArea');
   const giftSection = document.getElementById('gift');
   if (!wrapper || !giftSection) return;
 
@@ -130,7 +130,7 @@ function initFadeUpAnimations() {
   if (fadeUpInitialized) return;
   fadeUpInitialized = true;
 
-  const wrapper = document.getElementById('appWrapper');
+  const wrapper = document.getElementById('scrollArea');
   const fadeSections = document.querySelectorAll('main section[id]');
   if (!wrapper || !fadeSections.length) return;
 
@@ -151,7 +151,7 @@ function initFadeUpAnimations() {
 // section yang sedang dilihat, berlaku di semua section
 // ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
-  const wrapper = document.getElementById('appWrapper');
+  const wrapper = document.getElementById('scrollArea');
   const sections = document.querySelectorAll('main section[id]');
   const navLinks = document.querySelectorAll('.side-nav .nav-item[href]');
 

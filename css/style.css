@@ -32,46 +32,57 @@ body {
 }
 
 /* WRAPPER MOBILE-ONLY: seluruh undangan dibatasi seukuran layar HP.
-   transform: translateZ(0) membuat wrapper ini jadi "containing block" untuk
-   semua elemen anak yang position:fixed (nav-cluster, toast) -- efeknya,
-   elemen fixed tsb terkunci relatif ke KOTAK HP ini, bukan ke seluruh
-   jendela browser. Ini yang bikin tampilan laptop otomatis sama seperti hp. */
+   PENTING: appWrapper SENDIRI TIDAK di-scroll (tidak ada overflow di sini).
+   Dia cuma "bingkai diam" -- acuan posisi untuk nav-cluster, audio-control,
+   dan toast yang position:fixed. transform: translateZ(0) membuat wrapper
+   ini jadi containing block untuk elemen fixed tsb, jadi mereka terkunci
+   ke kotak HP ini, bukan ke seluruh jendela browser (laptop otomatis sama
+   seperti hp). Yang benar-benar di-scroll adalah #scrollArea di bawah. */
 #appWrapper {
     position: relative;
     width: 100%;
     max-width: 480px;
     height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
     background-color: var(--bg-sage-light);
     box-shadow: 0 0 60px rgba(0, 0, 0, 0.25);
-    -ms-overflow-style: none;
-    scrollbar-width: none;
     transform: translateZ(0);
 }
-#appWrapper::-webkit-scrollbar { width: 0; height: 0; }
 
-/* GRUP NAVIGASI: tombol musik + side-nav.
-   Disusun VERTIKAL (audio di atas, pill nav di bawah) supaya pill nav
-   dapat lebar penuh untuk mengembang saat section aktif/hover, tanpa
-   desak-desakan dengan tombol musik.
+/* LAPISAN SCROLL: cover + main ada di sini. Nav-cluster, audio-control,
+   dan toast SENGAJA ditaruh di LUAR div ini (sebagai anak langsung
+   #appWrapper), supaya mereka tidak ikut tergulung saat konten di-scroll. */
+#scrollArea {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+#scrollArea::-webkit-scrollbar { width: 0; height: 0; }
+
+/* GRUP NAVIGASI: pill nav saja, dipusatkan di bawah.
    position: fixed relatif ke #appWrapper (lihat transform di atasnya),
-   jadi selalu nempel di bagian bawah "layar HP" di ukuran layar apa pun. */
+   jadi selalu nempel di bagian bawah "layar HP" di ukuran layar apa pun,
+   dan (karena sekarang di luar #scrollArea) tidak ikut tergulung. */
 .nav-cluster {
     position: fixed;
     left: 50%;
     bottom: 18px;
     transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
     z-index: 999;
-    max-width: 94%;
+    max-width: calc(100% - 80px);
 }
 
-/* TOMBOL AUDIO: bulatan mengambang sendiri di atas pill nav */
+/* TOMBOL AUDIO: bulatan mengambang sendiri di pojok kanan bawah,
+   terpisah dari pill nav supaya pill nav dapat ruang penuh untuk
+   mengembang saat section aktif/hover. */
 .audio-control {
+    position: fixed;
+    right: 16px;
+    bottom: 90px;
     width: 46px;
     height: 46px;
     background-color: var(--dark-sage);
@@ -85,6 +96,7 @@ body {
     border: 2px solid var(--primary-sage);
     transition: var(--transition);
     flex-shrink: 0;
+    z-index: 999;
 }
 .audio-control i { font-size: 1.15rem; }
 
