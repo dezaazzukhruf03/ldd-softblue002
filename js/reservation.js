@@ -1,147 +1,296 @@
-// ==========================================================
-// JS / RESERVATION.JS - RSVP & UCAPAN (GOOGLE SHEETS)
-// ==========================================================
-// File ini terpisah dari script.js agar mudah diganti/disesuaikan
-// dengan Google Apps Script Web App yang terhubung ke Spreadsheet
-// multi-sheet milik Anda.
-//
-// CARA PAKAI:
-// 1. Buat Google Spreadsheet dengan sheet, misalnya "Ucapan"
-//    berkolom: Waktu | Nama | Kehadiran | Pesan
-// 2. Buka Extensions > Apps Script di spreadsheet tsb, lalu buat
-//    fungsi doGet(e) dan doPost(e) yang membaca/menulis ke sheet
-//    "Ucapan" (bisa pakai sheet lain untuk data lain, misal "Tamu").
-// 3. Deploy sebagai Web App (akses: "Anyone"), lalu salin URL
-//    hasil deploy dan tempel ke RESERVATION_API_URL di bawah ini.
+(function () {
 
-const RESERVATION_API_URL = 'GANTI_DENGAN_URL_WEB_APP_GOOGLE_APPS_SCRIPT';
+  /* =====================================================
+     GOOGLE APPS SCRIPT
+  ===================================================== */
 
-const rsvpForm = document.getElementById('rsvpForm');
-const commentsList = document.getElementById('commentsList');
+  const SCRIPT_URL =
+    "https://script.google.com/macros/s/AKfycbwrHji0oU0VPiLM7lhkhGMd53HvzZJplOXwqRYE-ox-z_f4rGo1FluF_EgG6mU6Bpc/exec";
 
-// Ambil nama tamu dari parameter URL, contoh: index.html?to=Budi+Santoso
-function getGuestNameFromURL() {
-  const params = new URLSearchParams(window.location.search);
-  const name = params.get('to');
-  return name ? decodeURIComponent(name.replace(/\+/g, ' ')) : null;
-}
+  const SHEET_NAME = "Sampel";
 
-document.addEventListener('DOMContentLoaded', () => {
-  // Guest box (Kepada Yth...) default disembunyikan lewat CSS,
-  // hanya dimunculkan jika ada parameter ?to=NamaTamu di URL.
-  const guestName = getGuestNameFromURL();
-  const guestBoxEl = document.querySelector('.guest-box');
+  /* -------------------------------
+     ELEMEN (ID sesuai index.html)
+  -------------------------------- */
+  const form = document.getElementById("rsvp-form");
+  const list = document.getElementById("wishes-list");
+  const rsvpName = document.getElementById("nama");
+  const rsvpStatus = document.getElementById("kehadiran");
+  const rsvpMessage = document.getElementById("ucapan");
 
-  if (guestName) {
-    const guestNameEl = document.getElementById('guestName');
-    const namaInput = document.getElementById('nama');
-    if (guestNameEl) guestNameEl.textContent = guestName;
-    if (namaInput) namaInput.value = guestName;
-    if (guestBoxEl) guestBoxEl.style.display = 'block';
-  }
+  /* -------------------------------
+     HELPER
+  -------------------------------- */
+  const escapeHtml = (str) => {
+    return String(str ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
 
-  loadComments();
-});
+  // Format tanggal saja (tanpa jam), contoh: "16 Agustus 2026"
+  const formatDate = (value) => {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return "";
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+  };
 
-// Kirim RSVP + ucapan ke Google Sheets
-if (rsvpForm) {
-  rsvpForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
+  /* --------------------------------
+     STATISTIK RSVP (opsional, aman jika elemen belum ada di HTML)
+  -------------------------------- */
+  const updateRsvpStatistics = (data) => {
+    const statHadir = document.getElementById("statHadir");
+    const statTidakHadir = document.getElementById("statTidakHadir");
+    const statRagu = document.getElementById("statRagu");
+    const statTotal = document.getElementById("statTotal");
 
-    if (RESERVATION_API_URL.includes('GANTI_DENGAN_URL')) {
-      showToast('URL Google Sheets belum diatur di reservation.js');
+    if (!statHadir || !statTidakHadir || !statRagu || !statTotal) return;
+
+    let hadir = 0, tidakHadir = 0, ragu = 0;
+
+    if (Array.isArray(data)) {
+      data.forEach((item) => {
+        const status = String(item.kehadiran || "").trim().toLowerCase();
+        if (status === "hadir") hadir++;
+        else if (status === "tidak hadir") tidakHadir++;
+        else if (status === "masih ragu" || status === "ragu") ragu++;
+      });
+    }
+
+    const total = hadir + tidakHadir + ragu;
+    statHadir.textContent = hadir;
+    statTidakHadir.textContent = tidakHadir;
+    statRagu.textContent = ragu;
+    statTotal.textContent = total;
+  };
+
+  /* --------------------------------
+     RENDER UCAPAN (pakai class CSS yang sudah ada)
+  -------------------------------- */
+  let allWishesData = [];
+  const WISH_PAGE_SIZE = 3;
+  let wishVisibleCount = WISH_PAGE_SIZE;
+
+  const renderWishes = (data) => {
+    if (!list) return;
+
+    if (!Array.isArray(data) || data.length === 0) {
+      list.innerHTML = `<p class="wish-empty">Belum ada ucapan. Jadilah yang pertama mengirim doa.</p>`;
+      updateRsvpStatistics([]);
       return;
     }
 
-    const nama = document.getElementById('nama').value.trim();
-    const kehadiran = document.getElementById('kehadiran').value;
-    const pesan = document.getElementById('pesan').value.trim();
+    updateRsvpStatistics(data);
 
-    if (!nama || !kehadiran || !pesan) return;
+    allWishesData = data.slice().reverse();
+    wishVisibleCount = WISH_PAGE_SIZE;
+    renderWishPage();
+  };
 
-    const submitBtn = rsvpForm.querySelector('.btn-submit');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
+  const renderWishPage = () => {
+    const visible = allWishesData.slice(0, wishVisibleCount);
 
-    try {
-      const response = await fetch(RESERVATION_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // hindari preflight CORS di Apps Script
-        body: JSON.stringify({
-          sheet: 'Ucapan',
-          nama,
-          kehadiran,
-          pesan
-        })
+    const badgeClassFor = (kehadiran) =>
+      kehadiran === "Hadir" ? "wish-badge" : "wish-badge tidak-hadir";
+
+    const itemsHtml = visible.map((item) => `
+      <div class="wish-item">
+        <div class="wish-header">
+          <span class="wish-name">${escapeHtml(item.nama)}</span>
+          <span class="${badgeClassFor(item.kehadiran)}">${escapeHtml(item.kehadiran)}</span>
+        </div>
+        ${item.ucapan ? `<p class="wish-text">${escapeHtml(item.ucapan)}</p>` : ""}
+        ${item.waktu ? `<small class="wish-time">${formatDate(item.waktu)}</small>` : ""}
+      </div>
+    `).join("");
+
+    const hasMore = allWishesData.length > wishVisibleCount;
+
+    list.innerHTML = itemsHtml + (
+      hasMore
+        ? `<button type="button" id="wishLoadMore" class="wish-load-more">
+             Muat Ucapan Lainnya (${allWishesData.length - wishVisibleCount})
+           </button>`
+        : ""
+    );
+
+    const loadMoreBtn = document.getElementById("wishLoadMore");
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener("click", () => {
+        wishVisibleCount += WISH_PAGE_SIZE;
+        renderWishPage();
+      });
+    }
+  };
+
+  /* --------------------------------
+     LOAD UCAPAN DARI GOOGLE SHEETS (JSONP)
+  -------------------------------- */
+  const loadWishes = () => {
+    if (!list) return;
+
+    const callbackName = "__dezaLaraCallback_" + Date.now();
+    const script = document.createElement("script");
+
+    window[callbackName] = (data) => {
+      try {
+        if (data && data.success === false) {
+          console.error("Apps Script:", data.message);
+          return;
+        }
+        renderWishes(data);
+      } finally {
+        delete window[callbackName];
+        script.remove();
+      }
+    };
+
+    script.onerror = () => {
+      console.error("Gagal mengambil data ucapan dari Google Sheets.");
+      delete window[callbackName];
+      script.remove();
+    };
+
+    script.src =
+      SCRIPT_URL +
+      "?sheet=" + encodeURIComponent(SHEET_NAME) +
+      "&callback=" + encodeURIComponent(callbackName) +
+      "&t=" + Date.now();
+
+    document.body.appendChild(script);
+
+    setTimeout(() => {
+      if (window[callbackName]) {
+        delete window[callbackName];
+        script.remove();
+        console.warn("Request ucapan timeout.");
+      }
+    }, 10000);
+  };
+
+  /* --------------------------------
+     KIRIM DATA KE GOOGLE SHEETS (hidden iframe, hindari CORS)
+  -------------------------------- */
+  const submitToGoogleSheets = (data) => {
+    return new Promise((resolve) => {
+      const iframeName = "dezaLaraSubmit_" + Date.now();
+
+      const iframe = document.createElement("iframe");
+      iframe.name = iframeName;
+      iframe.style.display = "none";
+      document.body.appendChild(iframe);
+
+      const submitForm = document.createElement("form");
+      submitForm.method = "POST";
+      submitForm.action = SCRIPT_URL;
+      submitForm.target = iframeName;
+      submitForm.style.display = "none";
+
+      Object.entries(data).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = value ?? "";
+        submitForm.appendChild(input);
       });
 
-      const result = await response.json();
+      document.body.appendChild(submitForm);
 
-      if (result && result.status === 'success') {
-        showToast('Terima kasih atas konfirmasi & ucapannya!');
-        rsvpForm.reset();
-        addCommentToList({ nama, kehadiran, pesan }, true);
-      } else {
-        showToast('Gagal mengirim, silakan coba lagi.');
+      let finished = false;
+
+      const cleanup = () => {
+        submitForm.remove();
+        setTimeout(() => iframe.remove(), 500);
+      };
+
+      const success = () => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        resolve();
+      };
+
+      iframe.addEventListener("load", success, { once: true });
+
+      submitForm.submit();
+
+      setTimeout(() => {
+        if (!finished) success();
+      }, 3000);
+    });
+  };
+
+  /* --------------------------------
+     SUBMIT RSVP
+  -------------------------------- */
+  if (form) {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const name = rsvpName ? rsvpName.value.trim() : "";
+      const status = rsvpStatus ? rsvpStatus.value : "";
+      const msg = rsvpMessage ? rsvpMessage.value.trim() : "";
+
+      if (!name || !status || !msg) {
+        showToast("Mohon lengkapi semua kolom form.");
+        return;
       }
-    } catch (err) {
-      console.error('Gagal mengirim RSVP:', err);
-      showToast('Gagal mengirim, periksa koneksi Anda.');
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText;
-    }
-  });
-}
 
-// Ambil daftar ucapan dari sheet "Ucapan" di Google Sheets
-async function loadComments() {
-  if (!commentsList) return;
-  if (RESERVATION_API_URL.includes('GANTI_DENGAN_URL')) return;
+      const submitButton = form.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...';
+      }
 
-  try {
-    const response = await fetch(`${RESERVATION_API_URL}?sheet=Ucapan`);
-    const data = await response.json();
+      try {
+        const data = {
+          sheet: SHEET_NAME,
+          nama: name,
+          kehadiran: status,
+          ucapan: msg
+        };
 
-    if (Array.isArray(data)) {
-      commentsList.innerHTML = '';
-      data.slice().reverse().forEach(item => addCommentToList(item, false));
-    }
-  } catch (err) {
-    console.error('Gagal memuat ucapan:', err);
+        await submitToGoogleSheets(data);
+
+        form.reset();
+        showToast("Terima kasih, RSVP dan ucapan Anda berhasil dikirim.");
+
+        setTimeout(() => loadWishes(), 1000);
+
+      } catch (error) {
+        console.error("Gagal mengirim RSVP:", error);
+        showToast("Maaf, ucapan belum berhasil dikirim. Silakan coba lagi.");
+      } finally {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim Ucapan';
+        }
+      }
+    });
   }
-}
 
-// Tambahkan satu kartu ucapan ke tampilan
-function addCommentToList(item, prepend) {
-  if (!commentsList) return;
+  /* --------------------------------
+     TOAST NOTIFIKASI GLOBAL
+  -------------------------------- */
+  window.showToast = window.showToast || function (msg) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerText = msg;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  };
 
-  const div = document.createElement('div');
-  div.classList.add('comment-item');
+  /* --------------------------------
+     LOAD UCAPAN SAAT WEBSITE DIBUKA
+  -------------------------------- */
+  loadWishes();
 
-  let statusClass = 'tidak-hadir';
-  if (item.kehadiran === 'Hadir') statusClass = 'hadir';
-  else if (item.kehadiran === 'Masih Ragu') statusClass = 'ragu';
-
-  div.innerHTML = `
-    <div class="comment-header">
-      <span class="comment-author">${escapeHTML(item.nama)}</span>
-      <span class="comment-badge ${statusClass}">${escapeHTML(item.kehadiran)}</span>
-    </div>
-    <div class="comment-text">${escapeHTML(item.pesan)}</div>
-  `;
-
-  if (prepend) {
-    commentsList.prepend(div);
-  } else {
-    commentsList.appendChild(div);
-  }
-}
-
-// Cegah XSS sederhana saat menampilkan data dari spreadsheet
-function escapeHTML(str) {
-  const div = document.createElement('div');
-  div.textContent = str ?? '';
-  return div.innerHTML;
-}
+})();

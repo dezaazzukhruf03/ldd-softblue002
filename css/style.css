@@ -29,6 +29,7 @@ body {
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
+    min-height: 100dvh; /* dvh: tinggi layar sesungguhnya, tidak kepotong address bar */
 }
 
 /* WRAPPER MOBILE-ONLY: seluruh undangan dibatasi seukuran layar HP.
@@ -37,12 +38,20 @@ body {
    dan toast yang position:fixed. transform: translateZ(0) membuat wrapper
    ini jadi containing block untuk elemen fixed tsb, jadi mereka terkunci
    ke kotak HP ini, bukan ke seluruh jendela browser (laptop otomatis sama
-   seperti hp). Yang benar-benar di-scroll adalah #scrollArea di bawah. */
+   seperti hp). Yang benar-benar di-scroll adalah #scrollArea di bawah.
+   height pakai 100dvh (dynamic viewport height) dengan fallback 100vh --
+   100vh di Android Chrome dihitung dari tinggi layar SAAT address bar
+   disembunyikan (ukuran maksimum), padahal saat pertama dibuka address
+   bar masih terlihat, jadi area yang benar-benar tampak lebih pendek.
+   Efeknya nav-cluster/audio-control yang fixed di 'bottom' jadi kepotong
+   di bawah layar sampai discroll (address bar collapse, ukuran asli baru
+   kebuka). 100dvh menyesuaikan otomatis ke tinggi yang benar-benar terlihat. */
 #appWrapper {
     position: relative;
     width: 100%;
     max-width: 480px;
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     background-color: var(--bg-sage-light);
     box-shadow: 0 0 60px rgba(0, 0, 0, 0.25);
@@ -427,15 +436,91 @@ section { padding: 60px 0; border-bottom: 1px dashed rgba(111, 168, 220, 0.3); }
 .btn-submit:hover { background-color: var(--dark-sage); }
 .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
 
-.comments-list { margin-top: 30px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-.comment-item { background: var(--bg-sage-light); padding: 15px; border-radius: var(--radius-md); border-left: 3px solid var(--gold); }
-.comment-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
-.comment-author { font-weight: 600; font-size: 0.95rem; color: var(--dark-sage); }
-.comment-badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; background: rgba(111, 168, 220, 0.2); color: var(--dark-sage); white-space: nowrap; }
-.comment-badge.hadir { background: rgba(111, 168, 220, 0.25); color: var(--dark-sage); }
-.comment-badge.ragu { background: rgba(197, 160, 89, 0.25); color: #8A6D2F; }
-.comment-badge.tidak-hadir { background: rgba(196, 90, 90, 0.18); color: #A94442; }
-.comment-text { font-size: 0.9rem; color: var(--text-dark); }
+.wishes-list { margin-top: 30px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.wish-item { background: var(--bg-sage-light); padding: 15px; border-radius: var(--radius-md); border-left: 3px solid var(--gold); }
+.wish-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 5px; }
+.wish-name { font-weight: 600; font-size: 0.95rem; color: var(--dark-sage); }
+.wish-badge { font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; background: rgba(111, 168, 220, 0.25); color: var(--dark-sage); white-space: nowrap; }
+.wish-badge.tidak-hadir { background: rgba(196, 90, 90, 0.18); color: #A94442; }
+.wish-text { font-size: 0.9rem; color: var(--text-dark); margin-top: 4px; }
+.wish-time { display: block; font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; }
+.wish-empty { font-size: 0.9rem; color: var(--text-muted); text-align: center; padding: 10px 0; }
+.wish-load-more {
+    width: 100%;
+    margin-top: 5px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--dark-sage);
+    padding: 10px;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.wish-load-more:hover { background: var(--gold-soft); }
+
+/* LIGHTBOX GALERI: overlay full-screen dengan navigasi geser kiri/kanan */
+.lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 25, 38, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9500;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s;
+    touch-action: pan-y;
+}
+.lightbox.active { opacity: 1; visibility: visible; }
+
+.lightbox-image {
+    max-width: 88%;
+    max-height: 78vh;
+    border-radius: var(--radius-md);
+    box-shadow: 0 15px 45px rgba(0,0,0,0.5);
+    -webkit-user-select: none;
+    user-select: none;
+    object-fit: contain;
+}
+
+.lightbox-close,
+.lightbox-nav {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.12);
+    color: #FFF;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: var(--transition);
+}
+.lightbox-close:hover,
+.lightbox-nav:hover { background: var(--gold); border-color: var(--gold); }
+
+.lightbox-close { top: 20px; right: 20px; }
+.lightbox-prev { left: 12px; top: 50%; transform: translateY(-50%); }
+.lightbox-next { right: 12px; top: 50%; transform: translateY(-50%); }
+
+.lightbox-counter {
+    position: absolute;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #FFF;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    background: rgba(255,255,255,0.12);
+    padding: 4px 14px;
+    border-radius: 20px;
+}
 
 /* TOAST: fixed relatif ke #appWrapper (lihat transform di #appWrapper),
    jadi selalu nempel di bawah "layar HP" yang terlihat, tidak ikut
