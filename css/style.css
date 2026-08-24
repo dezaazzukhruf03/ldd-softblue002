@@ -60,7 +60,12 @@ body {
 
 /* LAPISAN SCROLL: cover + main ada di sini. Nav-cluster, audio-control,
    dan toast SENGAJA ditaruh di LUAR div ini (sebagai anak langsung
-   #appWrapper), supaya mereka tidak ikut tergulung saat konten di-scroll. */
+   #appWrapper), supaya mereka tidak ikut tergulung saat konten di-scroll.
+   scroll-behavior: auto (override global smooth di atas) -- animasi
+   scroll SUDAH kita kontrol manual lewat JS (smoothScrollTo di script.js).
+   Kalau browser ikut menganimasikan juga (smooth bawaan), dua animasi
+   itu tumpang-tindih dan "saling tarik" -- inilah yang bikin klik nav
+   di HP terasa ada perlawanan/delay, padahal di laptop mulus. */
 #scrollArea {
     position: relative;
     width: 100%;
@@ -69,6 +74,7 @@ body {
     overflow-x: hidden;
     -ms-overflow-style: none;
     scrollbar-width: none;
+    scroll-behavior: auto;
 }
 #scrollArea::-webkit-scrollbar { width: 0; height: 0; }
 
@@ -87,7 +93,7 @@ body {
 
 /* TOMBOL AUDIO: bulatan mengambang sendiri di pojok kanan bawah,
    terpisah dari pill nav supaya pill nav dapat ruang penuh untuk
-   mengembang saat section aktif/hover. */
+   mengembang saat section aktif/hover. Garis luar gold. */
 .audio-control {
     position: fixed;
     right: 16px;
@@ -102,14 +108,15 @@ body {
     align-items: center;
     cursor: pointer;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    border: 2px solid var(--primary-sage);
+    border: 2px solid var(--gold);
     transition: var(--transition);
     flex-shrink: 0;
     z-index: 999;
 }
 .audio-control i { font-size: 1.15rem; }
 
-/* NAVIGASI: pill horizontal, selalu satu baris (mobile & desktop sama) */
+/* NAVIGASI: pill horizontal, selalu satu baris (mobile & desktop sama).
+   Garis luar gold. */
 .side-nav {
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
@@ -119,7 +126,7 @@ body {
     flex-direction: row;
     gap: 8px;
     box-shadow: var(--shadow-soft);
-    border: 1px solid rgba(111, 168, 220, 0.25);
+    border: 1px solid var(--gold);
     max-width: 100%;
     overflow-x: auto;
     -ms-overflow-style: none;
@@ -255,9 +262,8 @@ section { position: relative; padding: 60px 0; border-bottom: 1px dashed rgba(11
 section > *:not(.section-flower) { position: relative; z-index: 1; }
 
 /* GAMBAR BUNGA DEKORATIF: aturan dasar (yang SAMA untuk semua section) --
-   ukuran & posisi (top/bottom/left/right/width) SENGAJA tidak diisi di
-   sini, diatur sendiri-sendiri per section di bawah, karena tinggi tiap
-   section beda-beda. */
+   ukuran & posisi (top/bottom/left/right/width) diatur sendiri-sendiri
+   per section di bawah, karena tinggi tiap section beda-beda. */
 .section-flower {
     position: absolute;
     height: auto;
@@ -323,7 +329,18 @@ section > *:not(.section-flower) { position: relative; z-index: 1; }
 
 .section-header { text-align: center; margin-bottom: 50px; }
 .section-subtitle { font-family: 'Sacramento', cursive; font-size: 2.2rem; color: var(--primary-sage); }
-.section-title { font-family: 'Cormorant Garamond', serif; font-size: 2.5rem; color: var(--dark-sage); font-weight: 700; }
+
+/* JUDUL UTAMA tiap section: garis luar gold berbentuk badge/pil */
+.section-title {
+    display: inline-block;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.5rem;
+    color: var(--dark-sage);
+    font-weight: 700;
+    border: 1px solid var(--gold);
+    border-radius: 30px;
+    padding: 4px 28px;
+}
 
 /* BERANDA (HOME) */
 .home-card { background: var(--bg-sage-card); border-radius: var(--radius-lg); padding: 45px 25px; text-align: center; box-shadow: var(--shadow-soft); border: 1px solid rgba(111, 168, 220, 0.2); }

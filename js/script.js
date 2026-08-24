@@ -7,18 +7,18 @@
 // ==========================================================
 // 1) Jeda diam di Beranda SEBELUM auto-scroll mulai berjalan (ms).
 //    Ini BUKAN kecepatan scroll -- ini cuma "berapa lama diam dulu".
-const AUTO_SCROLL_START_DELAY_MS = 900;
+const AUTO_SCROLL_START_DELAY_MS = 1000;
 
 // 2) Kecepatan scroll SETELAH mulai berjalan (px per detik).
 //    Dihitung konstan: makin panjang jarak Beranda->Gift, makin lama
 //    durasinya, tapi kecepatan visualnya selalu terasa sama.
 //    Angka lebih besar = scroll lebih CEPAT. Lebih kecil = lebih PELAN.
-const AUTO_SCROLL_SPEED_PX_PER_SEC = 160;
+const AUTO_SCROLL_SPEED_PX_PER_SEC = 1;
 
 // 3) Batas durasi scroll (ms), jaga-jaga supaya tidak kelewat instan
 //    atau kelewat lama walau jaraknya sangat pendek/panjang.
 const AUTO_SCROLL_MIN_DURATION = 2500;
-const AUTO_SCROLL_MAX_DURATION = 12000;
+const AUTO_SCROLL_MAX_DURATION = 120000;
 
 // Kunci scroll wrapper sebelum tombol buka undangan diklik
 document.addEventListener('DOMContentLoaded', () => {
