@@ -254,27 +254,72 @@ section { position: relative; padding: 60px 0; border-bottom: 1px dashed rgba(11
    secara stacking, supaya bunga jadi dekorasi LATAR, bukan menutupi kartu. */
 section > *:not(.section-flower) { position: relative; z-index: 1; }
 
-/* GAMBAR BUNGA DEKORATIF: 2 di kiri, 2 di kanan tiap section.
-   Posisi/ukuran di bawah ini baru perkiraan awal -- silakan disesuaikan
-   sendiri per section kalau perlu (ukuran gambar beda-beda, dsb). */
+/* GAMBAR BUNGA DEKORATIF: aturan dasar (yang SAMA untuk semua section) --
+   ukuran & posisi (top/bottom/left/right/width) SENGAJA tidak diisi di
+   sini, diatur sendiri-sendiri per section di bawah, karena tinggi tiap
+   section beda-beda. */
 .section-flower {
     position: absolute;
-    width: 250px;
     height: auto;
     pointer-events: none;
     user-select: none;
     z-index: 0;
     opacity: 0.9;
 }
-.flower-left { left: -25px; }
-.flower-right { right: -25px; }
-.flower-left-1,
-.flower-right-1 { top: -10px; }
-.flower-left-2,
-.flower-right-2 { bottom: -10px; transform: scaleY(-1); }
-.flower-right-1,
-.flower-right-2 { transform: scaleX(-1); }
-.flower-right-2 { transform: scaleX(-1) scaleY(-1); }
+
+/* ============================================================
+   BERANDA (#home) -- atur posisi/ukuran bunga section ini di sini
+   ============================================================ */
+#home .flower-left-1  { top: -0px; left: -85px; width: 400px; }
+#home .flower-left-2  { bottom: -0px; left: -85px; width: 400px; transform: scaleY(-1); }
+#home .flower-right-1 { top: -0px; right: -85px; width: 400px; transform: scaleX(-1); }
+#home .flower-right-2 { bottom: -0px; right: -85px; width: 400px; transform: scaleX(-1) scaleY(-1); }
+
+/* ============================================================
+   MEMPELAI (#mempelai)
+   ============================================================ */
+#mempelai .flower-left-1  { top: -100px; left: -85px; width: 400px; }
+#mempelai .flower-left-2  { bottom: -20px; left: -85px; width: 400px; transform: scaleY(-1); }
+#mempelai .flower-right-1 { top: -100px; right: -85px; width: 400px; transform: scaleX(-1); }
+#mempelai .flower-right-2 { bottom: -20px; right: -85px; width: 400px; transform: scaleX(-1) scaleY(-1); }
+
+/* ============================================================
+   LOVE STORY (#lovestory)
+   ============================================================ */
+#lovestory .flower-right-1 { top: -100px; right: -85px; width: 400px; transform: scaleX(-1); }
+#lovestory .flower-right-2 { bottom: -30px; right: -85px; width: 400px; transform: scaleX(-1) scaleY(-1); }
+
+/* ============================================================
+   ACARA (#acara)
+   ============================================================ */
+#acara .flower-left-1  { top: -30px; left: -85px; width: 400px; }
+#acara .flower-left-2  { bottom: -10px; left: -85px; width: 400px; transform: scaleY(-1); }
+#acara .flower-right-1 { top: -30px; right: -85px; width: 400px; transform: scaleX(-1); }
+#acara .flower-right-2 { bottom: -10px; right: -85px; width: 400px; transform: scaleX(-1) scaleY(-1); }
+
+/* ============================================================
+   GALERI (#galeri)
+   ============================================================ */
+#galeri .flower-left-1  { top: -0px; left: -85px; width: 50px; }
+#galeri .flower-left-2  { bottom: -50px; left: -85px; width: 400px; transform: scaleY(-1); }
+#galeri .flower-right-1 { top: -0px; right: -85px; width: 50px; transform: scaleX(-1); }
+#galeri .flower-right-2 { bottom: -50px; right: -85px; width: 400px; transform: scaleX(-1) scaleY(-1); }
+
+/* ============================================================
+   WEDDING GIFT (#gift)
+   ============================================================ */
+#gift .flower-left-1  { top: -10px; left: -85px; width: 400px; }
+#gift .flower-left-2  { bottom: -10px; left: -85px; width: 400px; transform: scaleY(-1); }
+#gift .flower-right-1 { top: -10px; right: -85px; width: 400px; transform: scaleX(-1); }
+#gift .flower-right-2 { bottom: -10px; right: -85px; width: 400px; transform: scaleX(-1) scaleY(-1); }
+
+/* ============================================================
+   RSVP (#rsvp)
+   ============================================================ */
+#rsvp .flower-left-1  { top: -60px; left: -85px; width: 400px; }
+#rsvp .flower-left-2  { bottom: -100px; left: -85px; width: 400px; transform: scaleY(-1); }
+#rsvp .flower-right-1 { top: -60px; right: -85px; width: 400px; transform: scaleX(-1); }
+#rsvp .flower-right-2 { bottom: -100px; right: -85px; width: 400px; transform: scaleX(-1) scaleY(-1); }
 
 .section-header { text-align: center; margin-bottom: 50px; }
 .section-subtitle { font-family: 'Sacramento', cursive; font-size: 2.2rem; color: var(--primary-sage); }

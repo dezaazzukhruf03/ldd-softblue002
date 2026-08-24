@@ -2,6 +2,24 @@
 // JS / SCRIPT.JS - LOGIKA UTAMA (BUKA UNDANGAN, SALIN REKENING)
 // ==========================================================
 
+// ==========================================================
+// PENGATURAN AUTO-SCROLL KE GIFT -- SEMUA DIATUR DI SINI SAJA
+// ==========================================================
+// 1) Jeda diam di Beranda SEBELUM auto-scroll mulai berjalan (ms).
+//    Ini BUKAN kecepatan scroll -- ini cuma "berapa lama diam dulu".
+const AUTO_SCROLL_START_DELAY_MS = 900;
+
+// 2) Kecepatan scroll SETELAH mulai berjalan (px per detik).
+//    Dihitung konstan: makin panjang jarak Beranda->Gift, makin lama
+//    durasinya, tapi kecepatan visualnya selalu terasa sama.
+//    Angka lebih besar = scroll lebih CEPAT. Lebih kecil = lebih PELAN.
+const AUTO_SCROLL_SPEED_PX_PER_SEC = 160;
+
+// 3) Batas durasi scroll (ms), jaga-jaga supaya tidak kelewat instan
+//    atau kelewat lama walau jaraknya sangat pendek/panjang.
+const AUTO_SCROLL_MIN_DURATION = 2500;
+const AUTO_SCROLL_MAX_DURATION = 12000;
+
 // Kunci scroll wrapper sebelum tombol buka undangan diklik
 document.addEventListener('DOMContentLoaded', () => {
   const wrapper = document.getElementById('scrollArea');
@@ -37,10 +55,10 @@ function openInvitation() {
   initFadeUpAnimations();
 
   // Auto-scroll perlahan: dari Beranda, melewati semua section,
-  // dan berhenti di section Wedding Gift
+  // dan berhenti di section Wedding Gift (lihat blok pengaturan di atas)
   setTimeout(() => {
     autoScrollToGift();
-  }, 900);
+  }, AUTO_SCROLL_START_DELAY_MS);
 }
 
 // ==========================================================
@@ -108,16 +126,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   });
 });
-
-// Kecepatan scroll konstan (px per detik). Durasi dihitung dari jarak
-// tempuh dibagi kecepatan ini, jadi kecepatan visualnya selalu terasa
-// sama pelan berapa pun panjang halaman -- bukan durasi tetap seperti
-// sebelumnya yang bikin halaman panjang terasa "meloncat cepat".
-// UBAH ANGKA INI SAJA untuk atur kecepatan auto-scroll ke Gift:
-// makin besar = makin cepat, makin kecil = makin pelan.
-const AUTO_SCROLL_SPEED_PX_PER_SEC = 160;
-const AUTO_SCROLL_MIN_DURATION = 2500;   // ms, batas bawah agar tidak terlalu instan
-const AUTO_SCROLL_MAX_DURATION = 12000;  // ms, batas atas agar tidak kelamaan
 
 function autoScrollToGift() {
   const wrapper = document.getElementById('scrollArea');
