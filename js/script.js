@@ -43,11 +43,31 @@ function openInvitation() {
   }, 900);
 }
 
-// Scroll halus kustom dengan easing, agar terasa "perlahan" melewati
-// setiap section alih-alih lompat langsung ke tujuan
-function smoothScrollTo(targetY, duration) {
+// ==========================================================
+// SCROLL KUSTOM: satu mesin scroll yang dipakai bersama untuk
+// auto-scroll ke Gift maupun klik navigasi pil. Bisa dibatalkan
+// (interruptible) supaya begitu layar disentuh saat sedang auto-scroll,
+// scroll langsung berhenti -- tidak "melawan" sentuhan user.
+// ==========================================================
+let activeScrollSession = null;
+
+function cancelActiveScroll() {
+  if (activeScrollSession) {
+    activeScrollSession.cancelled = true;
+    activeScrollSession = null;
+  }
+}
+
+function smoothScrollTo(targetY, duration, options = {}) {
+  const { interruptible = false } = options;
   const wrapper = document.getElementById('scrollArea');
   if (!wrapper) return;
+
+  // Batalkan sesi scroll kustom sebelumnya (kalau ada) sebelum mulai yang baru
+  cancelActiveScroll();
+
+  const session = interruptible ? { cancelled: false } : null;
+  if (interruptible) activeScrollSession = session;
 
   const startY = wrapper.scrollTop;
   const distance = targetY - startY;
@@ -58,6 +78,8 @@ function smoothScrollTo(targetY, duration) {
   }
 
   function scrollStep(timestamp) {
+    if (session && session.cancelled) return;
+
     if (!startTime) startTime = timestamp;
     const elapsed = timestamp - startTime;
     const progress = Math.min(elapsed / duration, 1);
@@ -66,16 +88,33 @@ function smoothScrollTo(targetY, duration) {
 
     if (progress < 1) {
       requestAnimationFrame(scrollStep);
+    } else if (interruptible && activeScrollSession === session) {
+      activeScrollSession = null;
     }
   }
 
   requestAnimationFrame(scrollStep);
 }
 
+// Begitu ada sentuhan/scroll/klik manual dari user di dalam area konten,
+// batalkan auto-scroll yang sedang berjalan (kalau ada).
+document.addEventListener('DOMContentLoaded', () => {
+  const wrapper = document.getElementById('scrollArea');
+  if (!wrapper) return;
+
+  ['touchstart', 'wheel', 'pointerdown'].forEach((evt) => {
+    wrapper.addEventListener(evt, () => {
+      if (activeScrollSession) cancelActiveScroll();
+    }, { passive: true });
+  });
+});
+
 // Kecepatan scroll konstan (px per detik). Durasi dihitung dari jarak
 // tempuh dibagi kecepatan ini, jadi kecepatan visualnya selalu terasa
 // sama pelan berapa pun panjang halaman -- bukan durasi tetap seperti
 // sebelumnya yang bikin halaman panjang terasa "meloncat cepat".
+// UBAH ANGKA INI SAJA untuk atur kecepatan auto-scroll ke Gift:
+// makin besar = makin cepat, makin kecil = makin pelan.
 const AUTO_SCROLL_SPEED_PX_PER_SEC = 160;
 const AUTO_SCROLL_MIN_DURATION = 2500;   // ms, batas bawah agar tidak terlalu instan
 const AUTO_SCROLL_MAX_DURATION = 12000;  // ms, batas atas agar tidak kelamaan
@@ -91,8 +130,42 @@ function autoScrollToGift() {
   let duration = (distance / AUTO_SCROLL_SPEED_PX_PER_SEC) * 1000;
   duration = Math.min(Math.max(duration, AUTO_SCROLL_MIN_DURATION), AUTO_SCROLL_MAX_DURATION);
 
-  smoothScrollTo(targetY, duration);
+  smoothScrollTo(targetY, duration, { interruptible: true });
 }
+
+// ==========================================================
+// NAVIGASI PIL: klik tombol di nav-cluster discroll secara manual
+// (bukan lompat-anchor bawaan browser), dihitung dari offsetTop --
+// tidak terpengaruh transform fade-up section yang belum pernah
+// terlihat, jadi tidak akan meleset ke section lain.
+// ==========================================================
+const NAV_SCROLL_SPEED_PX_PER_SEC = 900;
+const NAV_SCROLL_MIN_DURATION = 350;
+const NAV_SCROLL_MAX_DURATION = 1400;
+
+document.addEventListener('DOMContentLoaded', () => {
+  const wrapper = document.getElementById('scrollArea');
+  const navLinks = document.querySelectorAll('.side-nav .nav-item[href^="#"]');
+  if (!wrapper || !navLinks.length) return;
+
+  navLinks.forEach((link) => {
+    link.addEventListener('click', (e) => {
+      const targetId = link.getAttribute('href').slice(1);
+      const targetSection = document.getElementById(targetId);
+      if (!targetSection) return;
+
+      e.preventDefault();
+
+      const targetY = targetSection.offsetTop;
+      const distance = Math.abs(targetY - wrapper.scrollTop);
+
+      let duration = (distance / NAV_SCROLL_SPEED_PX_PER_SEC) * 1000;
+      duration = Math.min(Math.max(duration, NAV_SCROLL_MIN_DURATION), NAV_SCROLL_MAX_DURATION);
+
+      smoothScrollTo(targetY, duration, { interruptible: true });
+    });
+  });
+});
 
 // Fungsi Salin Rekening
 function copyToClipboard(elementId) {

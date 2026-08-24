@@ -248,7 +248,33 @@ body {
 /* padding-bottom diberi ruang untuk nav-cluster (audio + pill) yang
    sekarang fixed di semua ukuran layar, bukan cuma mobile */
 main { width: 100%; margin: 0 auto; padding: 0 20px 110px; }
-section { padding: 60px 0; border-bottom: 1px dashed rgba(111, 168, 220, 0.3); }
+section { position: relative; padding: 60px 0; border-bottom: 1px dashed rgba(111, 168, 220, 0.3); }
+
+/* Konten asli tiap section (bukan gambar bunga) dinaikkan di atas bunga
+   secara stacking, supaya bunga jadi dekorasi LATAR, bukan menutupi kartu. */
+section > *:not(.section-flower) { position: relative; z-index: 1; }
+
+/* GAMBAR BUNGA DEKORATIF: 2 di kiri, 2 di kanan tiap section.
+   Posisi/ukuran di bawah ini baru perkiraan awal -- silakan disesuaikan
+   sendiri per section kalau perlu (ukuran gambar beda-beda, dsb). */
+.section-flower {
+    position: absolute;
+    width: 250px;
+    height: auto;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+    opacity: 0.9;
+}
+.flower-left { left: -25px; }
+.flower-right { right: -25px; }
+.flower-left-1,
+.flower-right-1 { top: -10px; }
+.flower-left-2,
+.flower-right-2 { bottom: -10px; transform: scaleY(-1); }
+.flower-right-1,
+.flower-right-2 { transform: scaleX(-1); }
+.flower-right-2 { transform: scaleX(-1) scaleY(-1); }
 
 .section-header { text-align: center; margin-bottom: 50px; }
 .section-subtitle { font-family: 'Sacramento', cursive; font-size: 2.2rem; color: var(--primary-sage); }
