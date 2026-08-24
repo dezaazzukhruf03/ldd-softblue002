@@ -18,7 +18,7 @@ const AUTO_SCROLL_SPEED_PX_PER_SEC = 1;
 // 3) Batas durasi scroll (ms), jaga-jaga supaya tidak kelewat instan
 //    atau kelewat lama walau jaraknya sangat pendek/panjang.
 const AUTO_SCROLL_MIN_DURATION = 2500;
-const AUTO_SCROLL_MAX_DURATION = 120000;
+const AUTO_SCROLL_MAX_DURATION = 110000;
 
 // Kunci scroll wrapper sebelum tombol buka undangan diklik
 document.addEventListener('DOMContentLoaded', () => {
