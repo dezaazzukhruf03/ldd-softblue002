@@ -224,13 +224,22 @@ body {
 .cover-date { font-size: 1.1rem; letter-spacing: 2px; margin-bottom: 30px; }
 
 .guest-box {
-    display: none; /* hanya ditampilkan oleh reservation.js jika ada parameter ?to= */
+    display: none; /* hanya ditampilkan oleh js/guest.js kalau ada parameter ?to= di URL */
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255, 255, 255, 0.25);
     padding: 20px;
     border-radius: var(--radius-md);
     margin-bottom: 30px;
+}
+.guest-box.show {
+    display: block;
+    animation: guestBoxFadeIn 0.8s ease forwards;
+}
+@keyframes guestBoxFadeIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 .guest-box p { font-size: 0.9rem; opacity: 0.9; }
 .guest-name { font-size: 1.4rem; font-weight: 600; color: #FFF; margin-top: 5px; }
